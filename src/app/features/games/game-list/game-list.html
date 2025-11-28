@@ -1,0 +1,75 @@
+<div class="game-list-container">
+  <div class="header">
+    <h1>🎮 Mi Colección de Videojuegos</h1>
+    <p class="subtitle">Total: {{ filteredGames.length }} juegos</p>
+    <button class="btn-stats" [routerLink]="['/stats']">📊 Ver Estadísticas</button>
+  </div>
+
+  <div class="filters-section">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilters()"
+        placeholder="🔍 Buscar por título, plataforma o género..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-controls">
+  <select [(ngModel)]="filterEstado" (ngModelChange)="applyFilters()" class="filter-select">
+    <option value="Todos">Todos los estados</option>
+    <option value="Completado">Completado</option>
+    <option value="Jugando">Jugando</option>
+    <option value="Pendiente">Pendiente</option>
+  </select>
+
+  <select [(ngModel)]="sortBy" (ngModelChange)="applyFilters()" class="filter-select">
+    <option value="titulo">Ordenar por título</option>
+    <option value="calificacion">Ordenar por calificación</option>
+    <option value="anio">Ordenar por año</option>
+  </select>
+
+  <button class="btn-primary" [routerLink]="['/games/new']">+ Agregar Juego</button>
+</div>
+
+  <div class="games-grid">
+    <div *ngFor="let game of filteredGames" class="game-card">
+      <div class="game-header">
+        <h3 class="game-title">{{ game.titulo }}</h3>
+        <span [ngClass]="getEstadoClass(game.estado)" class="estado-badge">
+          {{ game.estado }}
+        </span>
+      </div>
+
+      <div class="game-details">
+        <div class="detail-row">
+          <span class="label">🎯 Plataforma:</span>
+          <span class="value">{{ game.plataforma }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">🎭 Género:</span>
+          <span class="value">{{ game.genero }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">📅 Año:</span>
+          <span class="value">{{ game.anioLanzamiento }}</span>
+        </div>
+        <div class="detail-row" *ngIf="game.calificacion">
+          <span class="label">⭐ Calificación:</span>
+          <span class="value rating">{{ game.calificacion }}/10</span>
+        </div>
+      </div>
+
+      <div class="game-actions">
+        <button class="btn-edit" [routerLink]="['/games/edit', game.id]">✏️ Editar</button>
+        <button class="btn-delete" (click)="deleteGame(game.id!)">🗑️ Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="filteredGames.length === 0" class="empty-state">
+    <p>😔 No se encontraron juegos</p>
+   <button class="btn-primary" [routerLink]="['/games/new']">+ Agregar Juego</button>
+  </div>
+</div>
