@@ -2,53 +2,66 @@
   <div class="form-card">
     <div class="form-header">
       <h1>{{ isEditMode ? '✏️ Editar Juego' : '🎮 Agregar Nuevo Juego' }}</h1>
+      <p class="form-subtitle">{{ isEditMode ? 'Actualiza la información de tu videojuego' : 'Completa los datos para agregar un nuevo videojuego a tu colección' }}</p>
     </div>
 
-    <form [formGroup]="gameForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="gameForm" (ngSubmit)="onSubmit()" novalidate>
       
       <!-- Título -->
       <div class="form-group">
-        <label for="titulo">Título del Juego *</label>
+        <label for="titulo">
+          Título del Juego <span class="required">*</span>
+        </label>
         <input 
           type="text" 
           id="titulo" 
           formControlName="titulo"
-          placeholder="Ej: The Legend of Zelda"
-          [class.error]="gameForm.get('titulo')?.invalid && gameForm.get('titulo')?.touched"
+          placeholder="Ej: The Legend of Zelda: Breath of the Wild"
+          [class.is-invalid]="hasError('titulo')"
+          [class.is-valid]="gameForm.get('titulo')?.valid && gameForm.get('titulo')?.touched"
         />
-        <span class="error-message" *ngIf="gameForm.get('titulo')?.invalid && gameForm.get('titulo')?.touched">
+        <span class="error-message" *ngIf="hasError('titulo')">
           {{ getErrorMessage('titulo') }}
+        </span>
+        <span class="field-hint" *ngIf="!hasError('titulo') && !gameForm.get('titulo')?.touched">
+          Ingresa el nombre completo del videojuego
         </span>
       </div>
 
       <!-- Plataforma y Género -->
       <div class="form-row">
         <div class="form-group">
-          <label for="plataforma">Plataforma *</label>
+          <label for="plataforma">
+            Plataforma <span class="required">*</span>
+          </label>
           <select 
             id="plataforma" 
             formControlName="plataforma"
-            [class.error]="gameForm.get('plataforma')?.invalid && gameForm.get('plataforma')?.touched"
+            [class.is-invalid]="hasError('plataforma')"
+            [class.is-valid]="gameForm.get('plataforma')?.valid && gameForm.get('plataforma')?.touched"
           >
-            <option value="">Selecciona una plataforma</option>
+            <option value="" disabled>Selecciona una plataforma</option>
             <option *ngFor="let plat of plataformas" [value]="plat">{{ plat }}</option>
           </select>
-          <span class="error-message" *ngIf="gameForm.get('plataforma')?.invalid && gameForm.get('plataforma')?.touched">
+          <span class="error-message" *ngIf="hasError('plataforma')">
             {{ getErrorMessage('plataforma') }}
           </span>
         </div>
 
         <div class="form-group">
-          <label for="genero">Género *</label>
+          <label for="genero">
+            Género <span class="required">*</span>
+          </label>
           <select 
             id="genero" 
             formControlName="genero"
-            [class.error]="gameForm.get('genero')?.invalid && gameForm.get('genero')?.touched"
+            [class.is-invalid]="hasError('genero')"
+            [class.is-valid]="gameForm.get('genero')?.valid && gameForm.get('genero')?.touched"
           >
-            <option value="">Selecciona un género</option>
+            <option value="" disabled>Selecciona un género</option>
             <option *ngFor="let gen of generos" [value]="gen">{{ gen }}</option>
           </select>
-          <span class="error-message" *ngIf="gameForm.get('genero')?.invalid && gameForm.get('genero')?.touched">
+          <span class="error-message" *ngIf="hasError('genero')">
             {{ getErrorMessage('genero') }}
           </span>
         </div>
@@ -57,27 +70,39 @@
       <!-- Año y Estado -->
       <div class="form-row">
         <div class="form-group">
-          <label for="anioLanzamiento">Año de Lanzamiento *</label>
+          <label for="anioLanzamiento">
+            Año de Lanzamiento <span class="required">*</span>
+          </label>
           <input 
             type="number" 
             id="anioLanzamiento" 
             formControlName="anioLanzamiento"
             placeholder="2024"
-            [class.error]="gameForm.get('anioLanzamiento')?.invalid && gameForm.get('anioLanzamiento')?.touched"
+            [min]="minYear"
+            [max]="maxYear"
+            [class.is-invalid]="hasError('anioLanzamiento')"
+            [class.is-valid]="gameForm.get('anioLanzamiento')?.valid && gameForm.get('anioLanzamiento')?.touched"
           />
-          <span class="error-message" *ngIf="gameForm.get('anioLanzamiento')?.invalid && gameForm.get('anioLanzamiento')?.touched">
+          <span class="error-message" *ngIf="hasError('anioLanzamiento')">
             {{ getErrorMessage('anioLanzamiento') }}
+          </span>
+          <span class="field-hint" *ngIf="!hasError('anioLanzamiento') && !gameForm.get('anioLanzamiento')?.touched">
+            Entre {{ minYear }} y {{ maxYear }}
           </span>
         </div>
 
         <div class="form-group">
-          <label for="estado">Estado *</label>
+          <label for="estado">
+            Estado <span class="required">*</span>
+          </label>
           <select 
             id="estado" 
             formControlName="estado"
-            [class.error]="gameForm.get('estado')?.invalid && gameForm.get('estado')?.touched"
+            [class.is-valid]="gameForm.get('estado')?.valid && gameForm.get('estado')?.touched"
           >
-            <option *ngFor="let est of estados" [value]="est">{{ est }}</option>
+            <option *ngFor="let est of estados" [value]="est">
+              {{ est === 'Completado' ? '✅ ' : est === 'Jugando' ? '🎮 ' : '⏳ ' }}{{ est }}
+            </option>
           </select>
         </div>
       </div>
@@ -85,7 +110,9 @@
       <!-- Calificación y Fecha -->
       <div class="form-row">
         <div class="form-group">
-          <label for="calificacion">Calificación (0-10)</label>
+          <label for="calificacion">
+            Calificación ⭐ <span class="optional">(opcional)</span>
+          </label>
           <input 
             type="number" 
             id="calificacion" 
@@ -93,34 +120,64 @@
             placeholder="8"
             min="0"
             max="10"
-            [class.error]="gameForm.get('calificacion')?.invalid && gameForm.get('calificacion')?.touched"
+            step="1"
+            [class.is-invalid]="hasError('calificacion')"
+            [class.is-valid]="gameForm.get('calificacion')?.valid && gameForm.get('calificacion')?.value && gameForm.get('calificacion')?.touched"
           />
-          <span class="error-message" *ngIf="gameForm.get('calificacion')?.invalid && gameForm.get('calificacion')?.touched">
+          <span class="error-message" *ngIf="hasError('calificacion')">
             {{ getErrorMessage('calificacion') }}
+          </span>
+          <span class="field-hint" *ngIf="!hasError('calificacion') && !gameForm.get('calificacion')?.touched">
+            De 0 a 10 (deja vacío si aún no lo calificas)
           </span>
         </div>
 
         <div class="form-group">
-          <label for="fechaAdquisicion">Fecha de Adquisición *</label>
+          <label for="fechaAdquisicion">
+            Fecha de Adquisición <span class="required">*</span>
+          </label>
           <input 
             type="date" 
             id="fechaAdquisicion" 
             formControlName="fechaAdquisicion"
-            [class.error]="gameForm.get('fechaAdquisicion')?.invalid && gameForm.get('fechaAdquisicion')?.touched"
+            [max]="currentDate"
+            [class.is-invalid]="hasError('fechaAdquisicion')"
+            [class.is-valid]="gameForm.get('fechaAdquisicion')?.valid && gameForm.get('fechaAdquisicion')?.touched"
           />
-          <span class="error-message" *ngIf="gameForm.get('fechaAdquisicion')?.invalid && gameForm.get('fechaAdquisicion')?.touched">
+          <span class="error-message" *ngIf="hasError('fechaAdquisicion')">
             {{ getErrorMessage('fechaAdquisicion') }}
           </span>
         </div>
       </div>
 
+      <!-- Nota informativa -->
+      <div class="form-info" *ngIf="!gameForm.valid && gameForm.touched">
+        <span class="info-icon">ℹ️</span>
+        <span>Por favor completa todos los campos obligatorios marcados con <span class="required">*</span></span>
+      </div>
+
       <!-- Botones -->
       <div class="form-actions">
-        <button type="button" class="btn-cancel" (click)="onCancel()">
-          Cancelar
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="onCancel()"
+          [disabled]="isSubmitting"
+        >
+          ❌ Cancelar
         </button>
-        <button type="submit" class="btn-submit" [disabled]="gameForm.invalid">
-          {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+        <button 
+          type="submit" 
+          class="btn-submit" 
+          [disabled]="gameForm.invalid || isSubmitting"
+          [class.loading]="isSubmitting"
+        >
+          <span *ngIf="!isSubmitting">
+            {{ isEditMode ? '💾 Actualizar' : '✅ Guardar' }}
+          </span>
+          <span *ngIf="isSubmitting">
+            ⏳ Guardando...
+          </span>
         </button>
       </div>
 

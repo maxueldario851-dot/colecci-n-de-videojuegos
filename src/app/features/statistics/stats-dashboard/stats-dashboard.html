@@ -2,6 +2,7 @@
   <div class="stats-header">
     <h1>📊 Estadísticas de tu Colección</h1>
     <p class="subtitle">Análisis completo de tus videojuegos</p>
+    <button class="btn-back" routerLink="/games">← Volver a la colección</button>
   </div>
 
   <div class="summary-cards">
@@ -42,76 +43,86 @@
     <div class="chart-card">
       <h2>📈 Estado de los Juegos</h2>
       <div class="estado-stats">
-        <div *ngFor="let stat of estadisticasEstado" class="estado-item">
-          <div class="estado-info">
-            <span [ngClass]="getEstadoClass(stat.estado)" class="estado-badge">
-              {{ stat.estado }}
-            </span>
-            <span class="cantidad">{{ stat.cantidad }} juegos ({{ stat.porcentaje }}%)</span>
+        @for (stat of estadisticasEstado; track stat.estado) {
+          <div class="estado-item">
+            <div class="estado-info">
+              <span [ngClass]="getEstadoClass(stat.estado)" class="estado-badge">
+                {{ stat.estado }}
+              </span>
+              <span class="cantidad">{{ stat.cantidad }} juegos ({{ stat.porcentaje }}%)</span>
+            </div>
+            <div class="progress-bar">
+              <div 
+                class="progress-fill" 
+                [ngClass]="getEstadoClass(stat.estado)"
+                [style.width.%]="stat.porcentaje"
+              ></div>
+            </div>
           </div>
-          <div class="progress-bar">
-            <div 
-              class="progress-fill" 
-              [ngClass]="getEstadoClass(stat.estado)"
-              [style.width.%]="stat.porcentaje"
-            ></div>
-          </div>
-        </div>
+        }
       </div>
     </div>
 
     <div class="chart-card">
       <h2>🎯 Top Plataformas</h2>
       <div class="plataforma-stats">
-        <div *ngFor="let plat of plataformasStats" class="plataforma-item">
-          <div class="plataforma-label">
-            <span class="nombre">{{ plat.nombre }}</span>
-            <span class="cantidad">{{ plat.cantidad }}</span>
+        @for (plat of plataformasStats; track plat.nombre) {
+          <div class="plataforma-item">
+            <div class="plataforma-label">
+              <span class="nombre">{{ plat.nombre }}</span>
+              <span class="cantidad">{{ plat.cantidad }}</span>
+            </div>
+            <div class="bar-container">
+              <div 
+                class="bar-fill" 
+                [style.width.%]="getBarWidthPlataforma(plat.cantidad)"
+              ></div>
+            </div>
           </div>
-          <div class="bar-container">
-            <div 
-              class="bar-fill" 
-              [style.width.%]="getBarWidthPlataforma(plat.cantidad)"
-            ></div>
-          </div>
-        </div>
+        }
       </div>
     </div>
 
     <div class="chart-card">
       <h2>🎭 Géneros Favoritos</h2>
       <div class="genero-stats">
-        <div *ngFor="let gen of generosStats" class="genero-item">
-          <div class="genero-circle">{{ gen.cantidad }}</div>
-          <div class="genero-info">
-            <h4>{{ gen.nombre }}</h4>
-            <p>{{ gen.cantidad }} juego<span *ngIf="gen.cantidad !== 1">s</span></p>
+        @for (gen of generosStats; track gen.nombre) {
+          <div class="genero-item">
+            <div class="genero-circle">{{ gen.cantidad }}</div>
+            <div class="genero-info">
+              <h4>{{ gen.nombre }}</h4>
+              <p>{{ gen.cantidad }} juego@if (gen.cantidad !== 1) {<span>s</span>}</p>
+            </div>
           </div>
-        </div>
+        }
       </div>
     </div>
 
     <div class="chart-card">
       <h2>🕒 Últimos Juegos Agregados</h2>
       <div class="timeline">
-        <div *ngFor="let game of ultimosJuegos" class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-content">
-            <h4>{{ game.titulo }}</h4>
-            <p class="timeline-meta">
-              {{ game.plataforma }} • {{ game.genero }}
-              <span [ngClass]="getEstadoClass(game.estado)" class="mini-badge">
-                {{ game.estado }}
-              </span>
-            </p>
+        @for (game of ultimosJuegos; track game.id) {
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <h4>{{ game.titulo }}</h4>
+              <p class="timeline-meta">
+                {{ game.plataforma }} • {{ game.genero }}
+                <span [ngClass]="getEstadoClass(game.estado)" class="mini-badge">
+                  {{ game.estado }}
+                </span>
+              </p>
+            </div>
           </div>
-        </div>
+        }
       </div>
     </div>
   </div>
 
-  <div *ngIf="totalJuegos === 0" class="empty-state">
-    <p>📭 No hay juegos para mostrar estadísticas</p>
-    <p class="hint">Agrega algunos juegos para ver tus estadísticas</p>
-  </div>
+  @if (totalJuegos === 0) {
+    <div class="empty-state">
+      <p>📭 No hay juegos para mostrar estadísticas</p>
+      <p class="hint">Agrega algunos juegos para ver tus estadísticas</p>
+    </div>
+  }
 </div>

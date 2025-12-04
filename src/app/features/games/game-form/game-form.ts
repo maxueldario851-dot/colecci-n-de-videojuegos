@@ -16,10 +16,43 @@ export class GameFormComponent implements OnInit {
   gameForm: FormGroup;
   isEditMode = false;
   gameId: string | null = null;
+  isSubmitting = false;
 
-  plataformas = ['PlayStation 5', 'PlayStation 4', 'Xbox Series X', 'Xbox One', 'Nintendo Switch', 'PC', 'Otro'];
-  generos = ['Acción', 'Aventura', 'RPG', 'FPS', 'Deportes', 'Carreras', 'Estrategia', 'Puzzle', 'Simulación', 'Horror'];
-  estados: ('Completado' | 'Jugando' | 'Pendiente')[] = ['Completado', 'Jugando', 'Pendiente'];
+  plataformas = [
+    'PlayStation 5', 
+    'PlayStation 4', 
+    'Xbox Series X', 
+    'Xbox One', 
+    'Nintendo Switch', 
+    'PC', 
+    'Otro'
+  ];
+  
+  generos = [
+    'Acción', 
+    'Aventura', 
+    'RPG', 
+    'FPS', 
+    'Deportes', 
+    'Carreras', 
+    'Estrategia', 
+    'Puzzle', 
+    'Simulación', 
+    'Horror',
+    'Otro'
+  ];
+  
+  estados: ('Completado' | 'Jugando' | 'Pendiente')[] = [
+    'Pendiente',
+    'Jugando', 
+    'Completado'
+  ];
+
+  // Obtener año actual para validaciones
+  currentYear = new Date().getFullYear();
+  minYear = 1970;
+  maxYear = this.currentYear + 2;
+  currentDate = new Date().toISOString().split('T')[0];
 
   constructor(
     private fb: FormBuilder,
@@ -28,13 +61,29 @@ export class GameFormComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.gameForm = this.fb.group({
-      titulo: ['', [Validators.required, Validators.minLength(2)]],
+      titulo: ['', [
+        Validators.required, 
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]],
       plataforma: ['', Validators.required],
       genero: ['', Validators.required],
-      anioLanzamiento: ['', [Validators.required, Validators.min(1970), Validators.max(new Date().getFullYear() + 2)]],
+      anioLanzamiento: ['', [
+        Validators.required, 
+        Validators.min(this.minYear), 
+        Validators.max(this.maxYear),
+        Validators.pattern(/^\d{4}$/) // Solo números de 4 dígitos
+      ]],
       estado: ['Pendiente', Validators.required],
-      calificacion: ['', [Validators.min(0), Validators.max(10)]],
-      fechaAdquisicion: ['', Validators.required]
+      calificacion: ['', [
+        Validators.min(0), 
+        Validators.max(10),
+        Validators.pattern(/^([0-9]|10)$/) // Solo números enteros 0-10
+      ]],
+      fechaAdquisicion: ['', [
+        Validators.required,
+        this.dateValidator.bind(this)
+      ]]
     });
   }
 
@@ -43,7 +92,27 @@ export class GameFormComponent implements OnInit {
     if (this.gameId) {
       this.isEditMode = true;
       this.loadGame();
+    } else {
+      // Establecer fecha de hoy por defecto
+      const today = new Date().toISOString().split('T')[0];
+      this.gameForm.patchValue({ fechaAdquisicion: today });
     }
+  }
+
+  // Validador personalizado para fechas
+  dateValidator(control: any) {
+    if (!control.value) return null;
+    
+    const selectedDate = new Date(control.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // No permitir fechas futuras
+    if (selectedDate > today) {
+      return { futureDate: true };
+    }
+    
+    return null;
   }
 
   loadGame(): void {
@@ -62,15 +131,20 @@ export class GameFormComponent implements OnInit {
           calificacion: game.calificacion || '',
           fechaAdquisicion: fechaFormato
         });
+      } else {
+        // Si no encuentra el juego, redirigir
+        this.router.navigate(['/games']);
       }
     }
   }
 
   onSubmit(): void {
-    if (this.gameForm.valid) {
+    if (this.gameForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      
       const formValue = this.gameForm.value;
       const gameData: Videogame = {
-        titulo: formValue.titulo,
+        titulo: formValue.titulo.trim(),
         plataforma: formValue.plataforma,
         genero: formValue.genero,
         anioLanzamiento: parseInt(formValue.anioLanzamiento),
@@ -87,7 +161,10 @@ export class GameFormComponent implements OnInit {
         this.gameService.addGame(gameData);
       }
 
-      this.router.navigate(['/games']);
+      // Pequeño delay para feedback visual
+      setTimeout(() => {
+        this.router.navigate(['/games']);
+      }, 100);
     } else {
       this.markFormGroupTouched(this.gameForm);
     }
@@ -97,6 +174,7 @@ export class GameFormComponent implements OnInit {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       control?.markAsTouched();
+      control?.markAsDirty();
     });
   }
 
@@ -104,20 +182,82 @@ export class GameFormComponent implements OnInit {
     this.router.navigate(['/games']);
   }
 
+  // Método mejorado para mensajes de error
   getErrorMessage(fieldName: string): string {
     const control = this.gameForm.get(fieldName);
-    if (control?.hasError('required')) {
-      return 'Este campo es obligatorio';
+    
+    if (!control || !control.errors || !control.touched) {
+      return '';
     }
-    if (control?.hasError('minlength')) {
-      return `Mínimo ${control.errors?.['minlength'].requiredLength} caracteres`;
+
+    const errors = control.errors;
+
+    // Mensajes personalizados por campo
+    const fieldLabels: { [key: string]: string } = {
+      titulo: 'El título',
+      plataforma: 'La plataforma',
+      genero: 'El género',
+      anioLanzamiento: 'El año de lanzamiento',
+      estado: 'El estado',
+      calificacion: 'La calificación',
+      fechaAdquisicion: 'La fecha de adquisición'
+    };
+
+    const label = fieldLabels[fieldName] || 'Este campo';
+
+    if (errors['required']) {
+      return `${label} es obligatorio`;
     }
-    if (control?.hasError('min')) {
-      return `El valor mínimo es ${control.errors?.['min'].min}`;
+    
+    if (errors['minlength']) {
+      return `${label} debe tener al menos ${errors['minlength'].requiredLength} caracteres`;
     }
-    if (control?.hasError('max')) {
-      return `El valor máximo es ${control.errors?.['max'].max}`;
+    
+    if (errors['maxlength']) {
+      return `${label} no puede exceder ${errors['maxlength'].requiredLength} caracteres`;
     }
-    return '';
+    
+    if (errors['min']) {
+      if (fieldName === 'anioLanzamiento') {
+        return `El año debe ser mayor o igual a ${this.minYear}`;
+      }
+      return `El valor mínimo es ${errors['min'].min}`;
+    }
+    
+    if (errors['max']) {
+      if (fieldName === 'anioLanzamiento') {
+        return `El año no puede ser mayor a ${this.maxYear}`;
+      }
+      return `El valor máximo es ${errors['max'].max}`;
+    }
+    
+    if (errors['pattern']) {
+      if (fieldName === 'anioLanzamiento') {
+        return 'Ingresa un año válido (4 dígitos)';
+      }
+      if (fieldName === 'calificacion') {
+        return 'Ingresa un número entero entre 0 y 10';
+      }
+      return 'El formato es inválido';
+    }
+    
+    if (errors['futureDate']) {
+      return 'La fecha no puede ser futura';
+    }
+
+    return 'Este campo tiene un error';
+  }
+
+  // Helper para saber si un campo tiene error
+  hasError(fieldName: string): boolean {
+    const control = this.gameForm.get(fieldName);
+    return !!(control && control.invalid && control.touched);
+  }
+
+  // Helper para obtener el estado de un campo
+  getFieldClass(fieldName: string): string {
+    const control = this.gameForm.get(fieldName);
+    if (!control || !control.touched) return '';
+    return control.invalid ? 'is-invalid' : 'is-valid';
   }
 }

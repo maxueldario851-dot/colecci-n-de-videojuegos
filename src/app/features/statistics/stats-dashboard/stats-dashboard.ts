@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';  // ← AGREGA ESTA LÍNEA
 import { GameService } from '../../../core/services/game';
 import { Videogame } from '../../../models/videogame.model';
 
@@ -17,7 +18,7 @@ interface PlataformaStats {
 @Component({
   selector: 'app-stats-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],  // ← AGREGA RouterLink AQUÍ
   templateUrl: './stats-dashboard.html',
   styleUrls: ['./stats-dashboard.scss']
 })
@@ -110,6 +111,7 @@ export class StatsDashboardComponent implements OnInit {
   getMaxPlataforma(): number {
     return Math.max(...this.plataformasStats.map(p => p.cantidad), 1);
   }
+  
   getCompletados(): number {
     const stat = this.estadisticasEstado.find(e => e.estado === 'Completado');
     return stat ? stat.cantidad : 0;
