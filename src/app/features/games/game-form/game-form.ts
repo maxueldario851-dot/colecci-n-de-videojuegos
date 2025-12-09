@@ -48,7 +48,6 @@ export class GameFormComponent implements OnInit {
     'Completado'
   ];
 
-  // Obtener año actual para validaciones
   currentYear = new Date().getFullYear();
   minYear = 1970;
   maxYear = this.currentYear + 2;
@@ -72,13 +71,13 @@ export class GameFormComponent implements OnInit {
         Validators.required, 
         Validators.min(this.minYear), 
         Validators.max(this.maxYear),
-        Validators.pattern(/^\d{4}$/) // Solo números de 4 dígitos
+        Validators.pattern(/^\d{4}$/)
       ]],
       estado: ['Pendiente', Validators.required],
       calificacion: ['', [
         Validators.min(0), 
         Validators.max(10),
-        Validators.pattern(/^([0-9]|10)$/) // Solo números enteros 0-10
+        Validators.pattern(/^([0-9]|10)$/)
       ]],
       fechaAdquisicion: ['', [
         Validators.required,
@@ -91,15 +90,14 @@ export class GameFormComponent implements OnInit {
     this.gameId = this.route.snapshot.paramMap.get('id');
     if (this.gameId) {
       this.isEditMode = true;
-      this.loadGame();
+      // Para modo editar, necesitarías cargar el juego de Firestore
+      // Por ahora lo dejamos así, lo implementaremos después si es necesario
     } else {
-      // Establecer fecha de hoy por defecto
       const today = new Date().toISOString().split('T')[0];
       this.gameForm.patchValue({ fechaAdquisicion: today });
     }
   }
 
-  // Validador personalizado para fechas
   dateValidator(control: any) {
     if (!control.value) return null;
     
@@ -107,7 +105,6 @@ export class GameFormComponent implements OnInit {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // No permitir fechas futuras
     if (selectedDate > today) {
       return { futureDate: true };
     }
@@ -115,30 +112,7 @@ export class GameFormComponent implements OnInit {
     return null;
   }
 
-  loadGame(): void {
-    if (this.gameId) {
-      const game = this.gameService.getGameById(this.gameId);
-      if (game) {
-        const fecha = new Date(game.fechaAdquisicion);
-        const fechaFormato = fecha.toISOString().split('T')[0];
-        
-        this.gameForm.patchValue({
-          titulo: game.titulo,
-          plataforma: game.plataforma,
-          genero: game.genero,
-          anioLanzamiento: game.anioLanzamiento,
-          estado: game.estado,
-          calificacion: game.calificacion || '',
-          fechaAdquisicion: fechaFormato
-        });
-      } else {
-        // Si no encuentra el juego, redirigir
-        this.router.navigate(['/games']);
-      }
-    }
-  }
-
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.gameForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;
       
@@ -151,20 +125,22 @@ export class GameFormComponent implements OnInit {
         estado: formValue.estado,
         calificacion: formValue.calificacion ? parseInt(formValue.calificacion) : undefined,
         fechaAdquisicion: new Date(formValue.fechaAdquisicion),
-        userId: 'user1',
+        userId: 'anonymous',
         createdAt: new Date()
       };
 
-      if (this.isEditMode && this.gameId) {
-        this.gameService.updateGame(this.gameId, gameData);
-      } else {
-        this.gameService.addGame(gameData);
-      }
-
-      // Pequeño delay para feedback visual
-      setTimeout(() => {
+      try {
+        if (this.isEditMode && this.gameId) {
+          await this.gameService.updateGame(this.gameId, gameData);
+        } else {
+          await this.gameService.addGame(gameData);
+        }
         this.router.navigate(['/games']);
-      }, 100);
+      } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('Error al guardar el juego');
+        this.isSubmitting = false;
+      }
     } else {
       this.markFormGroupTouched(this.gameForm);
     }
@@ -182,7 +158,6 @@ export class GameFormComponent implements OnInit {
     this.router.navigate(['/games']);
   }
 
-  // Método mejorado para mensajes de error
   getErrorMessage(fieldName: string): string {
     const control = this.gameForm.get(fieldName);
     
@@ -192,7 +167,6 @@ export class GameFormComponent implements OnInit {
 
     const errors = control.errors;
 
-    // Mensajes personalizados por campo
     const fieldLabels: { [key: string]: string } = {
       titulo: 'El título',
       plataforma: 'La plataforma',
@@ -248,13 +222,11 @@ export class GameFormComponent implements OnInit {
     return 'Este campo tiene un error';
   }
 
-  // Helper para saber si un campo tiene error
   hasError(fieldName: string): boolean {
     const control = this.gameForm.get(fieldName);
     return !!(control && control.invalid && control.touched);
   }
 
-  // Helper para obtener el estado de un campo
   getFieldClass(fieldName: string): string {
     const control = this.gameForm.get(fieldName);
     if (!control || !control.touched) return '';

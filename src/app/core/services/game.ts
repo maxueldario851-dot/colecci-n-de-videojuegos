@@ -1,81 +1,73 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { 
+  Firestore, 
+  collection, 
+  collectionData, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  query,
+  where,
+  orderBy
+} from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
 import { Videogame } from '../../models/videogame.model';
+import { Auth } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
-  private gamesSubject = new BehaviorSubject<Videogame[]>([
-    {
-      id: '1',
-      titulo: 'The Legend of Zelda: Breath of the Wild',
-      plataforma: 'Nintendo Switch',
-      genero: 'Aventura',
-      anioLanzamiento: 2017,
-      estado: 'Completado',
-      calificacion: 10,
-      fechaAdquisicion: new Date('2020-05-15'),
-      userId: 'user1',
-      createdAt: new Date('2020-05-15')
-    },
-    {
-      id: '2',
-      titulo: 'God of War',
-      plataforma: 'PlayStation 5',
-      genero: 'Acción',
-      anioLanzamiento: 2018,
-      estado: 'Jugando',
-      calificacion: 9,
-      fechaAdquisicion: new Date('2021-03-20'),
-      userId: 'user1',
-      createdAt: new Date('2021-03-20')
-    },
-    {
-      id: '3',
-      titulo: 'Halo Infinite',
-      plataforma: 'Xbox Series X',
-      genero: 'FPS',
-      anioLanzamiento: 2021,
-      estado: 'Pendiente',
-      fechaAdquisicion: new Date('2023-01-10'),
-      userId: 'user1',
-      createdAt: new Date('2023-01-10')
-    }
-  ]);
 
-  games$ = this.gamesSubject.asObservable();
+  constructor(
+    private firestore: Firestore,
+    private auth: Auth
+  ) {}
 
+  // Obtener todos los juegos del usuario actual
   getGames(): Observable<Videogame[]> {
-    return this.games$;
+    const userId = this.auth.currentUser?.uid || 'anonymous';
+    const gamesCollection = collection(this.firestore, 'videogames');
+    const q = query(
+      gamesCollection,
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    return collectionData(q, { idField: 'id' }) as Observable<Videogame[]>;
   }
 
-  addGame(game: Videogame): void {
-    const newGame = {
+  // Agregar un nuevo juego
+  async addGame(game: Videogame): Promise<void> {
+    const userId = this.auth.currentUser?.uid || 'anonymous';
+    const gamesCollection = collection(this.firestore, 'videogames');
+    const gameData = {
       ...game,
-      id: Date.now().toString(),
-      userId: 'user1',
+      userId,
       createdAt: new Date()
     };
-    const currentGames = this.gamesSubject.value;
-    this.gamesSubject.next([...currentGames, newGame]);
+    await addDoc(gamesCollection, gameData);
   }
 
-  updateGame(id: string, game: Partial<Videogame>): void {
-    const currentGames = this.gamesSubject.value;
-    const index = currentGames.findIndex(g => g.id === id);
-    if (index !== -1) {
-      currentGames[index] = { ...currentGames[index], ...game };
-      this.gamesSubject.next([...currentGames]);
-    }
+  // Actualizar un juego existente
+  async updateGame(id: string, game: Partial<Videogame>): Promise<void> {
+    const gameDoc = doc(this.firestore, 'videogames', id);
+    await updateDoc(gameDoc, { ...game });
   }
 
-  deleteGame(id: string): void {
-    const currentGames = this.gamesSubject.value.filter(g => g.id !== id);
-    this.gamesSubject.next(currentGames);
+  // Eliminar un juego
+  async deleteGame(id: string): Promise<void> {
+    const gameDoc = doc(this.firestore, 'videogames', id);
+    await deleteDoc(gameDoc);
   }
 
+  // Obtener un juego por ID (versión síncrona para el formulario)
   getGameById(id: string): Videogame | undefined {
-    return this.gamesSubject.value.find(g => g.id === id);
+    return undefined;
+  }
+
+  // Observable de todos los juegos (para compatibilidad)
+  get games$(): Observable<Videogame[]> {
+    return this.getGames();
   }
 }

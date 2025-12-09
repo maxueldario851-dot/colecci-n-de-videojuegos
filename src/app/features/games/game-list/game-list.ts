@@ -57,9 +57,14 @@ export class GameListComponent implements OnInit {
     this.filteredGames = result;
   }
 
-  deleteGame(id: string): void {
+  async deleteGame(id: string): Promise<void> {
     if (confirm('¿Estás seguro de eliminar este juego?')) {
-      this.gameService.deleteGame(id);
+      try {
+        await this.gameService.deleteGame(id);
+      } catch (error) {
+        console.error('Error al eliminar:', error);
+        alert('Error al eliminar el juego');
+      }
     }
   }
 
