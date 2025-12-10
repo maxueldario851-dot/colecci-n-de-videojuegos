@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';  // ← AGREGA ESTA LÍNEA
 import { GameService } from '../../../core/services/game';
 import { Videogame } from '../../../models/videogame.model';
+import { AuthService } from '../../../core/services/auth.service';
 
 interface EstadisticasEstado {
   estado: string;
@@ -30,7 +31,10 @@ export class StatsDashboardComponent implements OnInit {
   ultimosJuegos: Videogame[] = [];
   generosStats: { nombre: string; cantidad: number }[] = [];
 
-  constructor(private gameService: GameService) {}
+  constructor(
+  private gameService: GameService,
+  private authService: AuthService
+) {}
 
   ngOnInit(): void {
     this.gameService.games$.subscribe(games => {
@@ -125,4 +129,9 @@ export class StatsDashboardComponent implements OnInit {
   getBarWidthPlataforma(cantidad: number): number {
     return (cantidad / this.getMaxPlataforma()) * 100;
   }
+  async logout(): Promise<void> {
+  if (confirm('¿Estás seguro de cerrar sesión?')) {
+    await this.authService.logout();
+  }
+}
 }

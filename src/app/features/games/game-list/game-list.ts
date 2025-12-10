@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GameService } from '../../../core/services/game';
 import { Videogame } from '../../../models/videogame.model';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-game-list',
@@ -19,7 +20,10 @@ export class GameListComponent implements OnInit {
   filterEstado: string = 'Todos';
   sortBy: string = 'titulo';
 
-  constructor(private gameService: GameService) {}
+  constructor(
+  private gameService: GameService,
+  private authService: AuthService
+) {}
 
   ngOnInit(): void {
     this.gameService.games$.subscribe(games => {
@@ -76,4 +80,9 @@ export class GameListComponent implements OnInit {
       default: return '';
     }
   }
+  async logout(): Promise<void> {
+  if (confirm('¿Estás seguro de cerrar sesión?')) {
+    await this.authService.logout();
+  }
+}
 }

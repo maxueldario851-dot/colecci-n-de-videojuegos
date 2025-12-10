@@ -2,9 +2,12 @@
   <div class="header">
     <h1>🎮 Mi Colección de Videojuegos</h1>
     <p class="subtitle">Total: {{ filteredGames.length }} juegos</p>
-    <button class="btn-stats" [routerLink]="['/stats']">📊 Ver Estadísticas</button>
+    <div class="header-actions">
+      <button class="btn-stats" [routerLink]="['/stats']">📊 Ver Estadísticas</button>
+      <button class="btn-logout" (click)="logout()">🚪 Cerrar Sesión</button>
+    </div>
   </div>
-
+  
   <div class="filters-section">
     <div class="search-box">
       <input

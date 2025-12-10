@@ -2,9 +2,12 @@
   <div class="stats-header">
     <h1>📊 Estadísticas de tu Colección</h1>
     <p class="subtitle">Análisis completo de tus videojuegos</p>
-    <button class="btn-back" routerLink="/games">← Volver a la colección</button>
+    <div class="header-actions">
+      <button class="btn-back" routerLink="/games">← Volver a la colección</button>
+      <button class="btn-logout" (click)="logout()">🚪 Cerrar Sesión</button>
+    </div>
   </div>
-
+  
   <div class="summary-cards">
     <div class="stat-card card-purple">
       <div class="card-icon">🎮</div>

@@ -480,6 +480,32 @@
   }
 }
 .btn-back {
+  .header-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-logout {
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  color: #e5e7eb;
+  border: 2px solid #4b5563;
+  padding: 0.7rem 1.8rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  
+  &:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    border-color: #6b7280;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  }
+}
   margin-top: 1rem;
   background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
   color: white;

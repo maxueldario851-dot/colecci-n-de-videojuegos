@@ -1,0 +1,65 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>🎮 Crear Cuenta</h1>
+      <p class="subtitle">Registra tu colección de videojuegos</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Correo Electrónico <span class="required">*</span></label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="tu@email.com"
+          [class.is-invalid]="hasError('email')"
+        />
+        <span class="error-message" *ngIf="hasError('email')">
+          {{ getErrorMessage('email') }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña <span class="required">*</span></label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Mínimo 6 caracteres"
+          [class.is-invalid]="hasError('password')"
+        />
+        <span class="error-message" *ngIf="hasError('password')">
+          {{ getErrorMessage('password') }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar Contraseña <span class="required">*</span></label>
+        <input
+          type="password"
+          id="confirmPassword"
+          formControlName="confirmPassword"
+          placeholder="Repite tu contraseña"
+          [class.is-invalid]="hasError('confirmPassword')"
+        />
+        <span class="error-message" *ngIf="hasError('confirmPassword')">
+          {{ getErrorMessage('confirmPassword') }}
+        </span>
+      </div>
+
+      <div class="error-box" *ngIf="errorMessage">
+        <span>⚠️ {{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="!isLoading">✅ Crear Cuenta</span>
+        <span *ngIf="isLoading">⏳ Creando cuenta...</span>
+      </button>
+
+      <div class="auth-footer">
+        <p>¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
+      </div>
+    </form>
+  </div>
+</div>

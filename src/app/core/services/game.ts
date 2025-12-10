@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { 
   Firestore, 
   collection, 
@@ -8,38 +8,34 @@ import {
   deleteDoc, 
   doc,
   query,
-  where,
-  orderBy
+  where
 } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
-import { Videogame } from '../../models/videogame.model';
 import { Auth } from '@angular/fire/auth';
+import { Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { Videogame } from '../../models/videogame.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
 
-  constructor(
-    private firestore: Firestore,
-    private auth: Auth
-  ) {}
-
-  // Obtener todos los juegos del usuario actual
-  getGames(): Observable<Videogame[]> {
-    const userId = this.auth.currentUser?.uid || 'anonymous';
+  get games$(): Observable<Videogame[]> {
+    if (!this.auth.currentUser) {
+      return of([]);
+    }
+    const userId = this.auth.currentUser.uid;
     const gamesCollection = collection(this.firestore, 'videogames');
-    const q = query(
-      gamesCollection,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
+    const q = query(gamesCollection, where('userId', '==', userId));
     return collectionData(q, { idField: 'id' }) as Observable<Videogame[]>;
   }
 
-  // Agregar un nuevo juego
   async addGame(game: Videogame): Promise<void> {
-    const userId = this.auth.currentUser?.uid || 'anonymous';
+    const userId = this.auth.currentUser?.uid;
+    if (!userId) throw new Error('Usuario no autenticado');
+    
     const gamesCollection = collection(this.firestore, 'videogames');
     const gameData = {
       ...game,
@@ -49,25 +45,17 @@ export class GameService {
     await addDoc(gamesCollection, gameData);
   }
 
-  // Actualizar un juego existente
   async updateGame(id: string, game: Partial<Videogame>): Promise<void> {
     const gameDoc = doc(this.firestore, 'videogames', id);
     await updateDoc(gameDoc, { ...game });
   }
 
-  // Eliminar un juego
   async deleteGame(id: string): Promise<void> {
     const gameDoc = doc(this.firestore, 'videogames', id);
     await deleteDoc(gameDoc);
   }
 
-  // Obtener un juego por ID (versión síncrona para el formulario)
   getGameById(id: string): Videogame | undefined {
     return undefined;
-  }
-
-  // Observable de todos los juegos (para compatibilidad)
-  get games$(): Observable<Videogame[]> {
-    return this.getGames();
   }
 }
