@@ -4,7 +4,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { GameListComponent } from './features/games/game-list/game-list';
 import { GameFormComponent } from './features/games/game-form/game-form';
-//import { StatsDashboardComponent } from './features/games/statistics/stats-dashboard/stats-dashboard';
+import { StatsDashboardComponent } from './features/statistics/stats-dashboard/stats-dashboard';
 
 export const routes: Routes = [
   {
@@ -35,11 +35,11 @@ export const routes: Routes = [
     component: GameFormComponent,
     canActivate: [authGuard]
   },
-  //{
-    //path: 'stats',
-    //component: StatsDashboardComponent,
-    //canActivate: [authGuard]
-  //},
+  {
+    path: 'stats',
+    component: StatsDashboardComponent,
+    canActivate: [authGuard]
+  },
   {
     path: '**',
     redirectTo: '/login'
